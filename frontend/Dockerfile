@@ -1,6 +1,6 @@
 # SvelteKit Frontend - Production multi-stage build
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 
 RUN corepack enable
 
@@ -21,7 +21,7 @@ ENV PUBLIC_POCKETBASE_URL=${PUBLIC_POCKETBASE_URL}
 RUN pnpm build
 
 # Stage 2: Production
-FROM node:20-alpine AS production
+FROM node:25-alpine AS production
 
 # Securite : utilisateur non-root
 RUN addgroup -S sveltekit && adduser -S sveltekit -G sveltekit
