@@ -1,6 +1,7 @@
-# Mini Intra Qualite - Projet Demo Lead QA
+# Mini Intra - Projet Demo Lead QA
 
 > Projet de demonstration des pratiques qualite et securite pour le poste de Lead Qualite sur l'Intra Epitech Lyceens.
+> Stack identique au projet reel : SvelteKit + TypeScript + PocketBase + Docker.
 
 ## Stack technique
 
@@ -11,22 +12,24 @@
 | Backend | PocketBase |
 | Validation | Zod + Superforms |
 | CSS | Tailwind CSS 4 |
-| Tests unitaires | Vitest |
+| Tests unitaires | Vitest (97 tests) |
 | Tests E2E | Playwright |
-| Lint | ESLint + Prettier |
-| CI/CD | GitHub Actions |
+| Lint | ESLint (regles strictes) + Prettier |
+| CI/CD | GitHub Actions (3 pipelines) |
+| Securite CI | CodeQL, TruffleHog, Gitleaks, Trivy |
 | Conteneurisation | Docker + Docker Compose |
+| Git hooks | pre-commit, commit-msg, pre-push |
 
 ## Architecture
 
 ```
 mini-intra/
-├── frontend/               # Application SvelteKit
+├── frontend/                # Application SvelteKit
 │   └── src/
 │       ├── lib/
-│       │   ├── server/     # Code serveur uniquement
-│       │   │   ├── auth/   # Authentification & gardes de route
-│       │   │   ├── db/     # Wrapper DB (interface abstraite)
+│       │   ├── server/      # Code serveur uniquement
+│       │   │   ├── auth/    # Authentification & gardes de route
+│       │   │   ├── db/      # Wrapper DB (interface abstraite)
 │       │   │   └── services/ # Logique metier
 │       │   ├── components/  # Composants Svelte reutilisables
 │       │   ├── schemas/     # Schemas Zod de validation
@@ -34,112 +37,183 @@ mini-intra/
 │       │   ├── types/       # Types TypeScript
 │       │   └── utils/       # Fonctions utilitaires pures
 │       ├── routes/          # Pages & API SvelteKit
-│       └── tests/           # Tests unitaires & integration
-├── pocketbase-backend/      # Backend PocketBase
+│       └── tests/           # Tests unitaires (9 fichiers, 97 tests)
+├── pocketbase-backend/      # Backend PocketBase (Dockerfile)
 ├── docs/                    # Documentation technique
-│   └── adr/                 # Architecture Decision Records
+│   ├── adr/                 # Architecture Decision Records
+│   └── securite/            # Threat model, RGPD, checklist, runbook
+├── scripts/                 # Scripts d'outillage
+├── .githooks/               # Git hooks versionnes
 ├── .github/                 # GitHub Actions & templates
-└── docker-compose.yml       # Orchestration
+│   ├── workflows/           # CI, security scan, quality gate
+│   └── ISSUE_TEMPLATE/      # Bug report, feature request
+├── docker-compose.yml       # Production
+├── docker-compose.dev.yml   # Dev avec hot reload
+└── Makefile                 # Commandes centralisees
 ```
 
-## Lancer l'application
+## Setup rapide
 
 ### Prerequis
 
 - Docker + Docker Compose
+- Git
 
-C'est tout. Pas besoin d'installer Node.js, pnpm ou quoi que ce soit d'autre.
-
-### Mode developpement (avec hot reload)
+### Premiere installation
 
 ```bash
-# 1. Copier les variables d'environnement
-cp .env.example .env
-
-# 2. Lancer tout le stack
-docker compose -f docker-compose.dev.yml up --build
+git clone https://github.com/Hugo-Fabresse/mini-intra.git
+cd mini-intra
+make setup
 ```
 
-L'app est accessible sur :
-- **Frontend** : http://localhost:5173
+Ce script fait tout automatiquement :
+1. Initialise le repo git
+2. Copie `.env.example` vers `.env`
+3. Installe les dependances frontend
+4. Installe les git hooks
+5. Lance les tests pour verifier
+
+### Lancer l'application
+
+```bash
+# Mode dev (hot reload)
+make dev
+
+# Mode dev en arriere-plan
+make dev-bg
+
+# Mode production
+make prod
+
+# Arreter
+make stop
+```
+
+- **Frontend dev** : http://localhost:5173
+- **Frontend prod** : http://localhost:3000
 - **PocketBase Admin** : http://localhost:8090/_/
 
-Les fichiers `src/` sont montes en volume : toute modification est refletee instantanement.
-
-### Mode production
+### Configurer la base de donnees
 
 ```bash
-# 1. Configurer les variables d'environnement
-cp .env.example .env
-# Remplir PB_ADMIN_EMAIL et PB_ADMIN_PASSWORD avec des vraies valeurs
+# 1. Creer le superuser PocketBase (voir le lien dans les logs Docker)
+make logs
 
-# 2. Build + lancement
-docker compose up --build -d
+# 2. Creer les collections et injecter les donnees de test
+make seed
 ```
 
-L'app est accessible sur :
-- **Frontend** : http://localhost:3000
-- **PocketBase Admin** : http://localhost:8090/_/
+Compte staff de test : `staff@epitech.eu` / `staffpassword12`
 
-### Commandes utiles
+## Commandes Make
 
 ```bash
-# Voir les logs
-docker compose -f docker-compose.dev.yml logs -f
-
-# Arreter tout
-docker compose -f docker-compose.dev.yml down
-
-# Reset la base de donnees
-docker compose -f docker-compose.dev.yml down -v
-
-# Lancer les tests (dans le container)
-docker compose -f docker-compose.dev.yml exec frontend pnpm test
-
-# Lancer le lint (dans le container)
-docker compose -f docker-compose.dev.yml exec frontend pnpm lint
+make help          # Affiche toutes les commandes disponibles
 ```
 
-### Sans Docker (optionnel)
-
-Si tu preferes lancer hors Docker :
-
-```bash
-# Prerequis : Node.js >= 20, pnpm
-cd frontend && pnpm install
-docker compose -f docker-compose.dev.yml up pocketbase -d  # juste le backend
-pnpm dev
-```
-
-### Scripts npm disponibles
-
-| Script | Description |
+| Commande | Description |
 |---|---|
-| `pnpm dev` | Serveur de developpement |
-| `pnpm build` | Build de production |
-| `pnpm test` | Tests unitaires (Vitest) |
-| `pnpm test:e2e` | Tests E2E (Playwright) |
-| `pnpm test:coverage` | Couverture de tests |
-| `pnpm lint` | ESLint + svelte-check |
-| `pnpm format` | Prettier |
-| `pnpm check` | Verification des types Svelte |
+| **Setup** | |
+| `make setup` | Setup complet du projet (1ere fois) |
+| `make hooks` | Installe les git hooks |
+| **Dev** | |
+| `make dev` | Lance l'app en mode dev (Docker) |
+| `make dev-bg` | Lance en arriere-plan |
+| `make prod` | Lance en mode production |
+| `make stop` | Arrete tous les containers |
+| `make logs` | Affiche les logs |
+| **Qualite** | |
+| `make test` | Lance les 97 tests unitaires |
+| `make test-watch` | Tests en mode watch |
+| `make coverage` | Rapport de couverture HTML |
+| `make lint` | Verifie ESLint + Prettier |
+| `make lint-fix` | Corrige automatiquement |
+| `make format` | Formate avec Prettier |
+| `make check` | Verification des types (svelte-check) |
+| `make quality` | Check complet avant PR |
+| **Donnees** | |
+| `make seed` | Collections + donnees de test |
+| `make reset-db` | Reset complet de la BDD |
+| **Securite** | |
+| `make audit` | Audit des dependances npm |
+
+## Qualite & Securite
+
+### Tests (97 tests, 9 fichiers)
+
+| Fichier | Module | Tests |
+|---|---|---|
+| `sanitize.test.ts` | XSS, PB filter, filename, email | 19 |
+| `schemas.test.ts` | Validation Zod (student, event, login) | 16 |
+| `db-memory.test.ts` | Wrapper DB (interface IDatabase) | 14 |
+| `student.service.test.ts` | Service metier etudiants | 12 |
+| `date.test.ts` | Utilitaires dates | 9 |
+| `guards.test.ts` | Auth guards (requireAuth, requireAdmin, requireCampus) | 8 |
+| `event.service.test.ts` | Service metier evenements | 8 |
+| `errors.test.ts` | ServiceError factory | 6 |
+| `session.test.ts` | Cookies de session | 5 |
+
+### GitHub Actions (3 pipelines)
+
+| Pipeline | Declencheur | Ce qu'il fait |
+|---|---|---|
+| **CI — Qualite** | Push/PR sur main/develop | ESLint, Prettier, svelte-check, tests + couverture (seuil 40%), build |
+| **Security — Audit & Scan** | Push/PR + cron hebdo | npm audit, TruffleHog, Gitleaks, CodeQL SAST, Trivy Docker, licences |
+| **Quality Gate — PR** | Pull Request | Tout-en-un : lint, tests, audit, build, detection secrets, no console.log, taille fichiers |
+
+### Git Hooks (versionnes dans `.githooks/`)
+
+| Hook | Ce qu'il bloque |
+|---|---|
+| `pre-commit` | Fichiers sensibles (.env, .pem), secrets hardcodes, console.log, erreurs ESLint, mauvais formatage |
+| `commit-msg` | Messages non Conventional Commits, majuscule initiale, point final |
+| `pre-push` | Tests qui echouent, build qui casse |
+
+### ESLint (regles strictes)
+
+- `no-explicit-any` : interdit
+- `no-eval`, `no-implied-eval`, `no-new-func` : securite
+- `no-console` : erreur (sauf warn/error)
+- `eqeqeq` : egalite stricte obligatoire
+- `complexity` : max 15
+- `max-depth` : max 4 niveaux d'imbrication
+- `max-lines-per-function` : max 100 lignes
+- `max-params` : max 5 parametres
+
+### Securite
+
+- Auth avec cookies HTTPOnly, Secure, SameSite=Strict
+- Route guards cote serveur (requireAuth, requireAdmin, requireCampusAccess)
+- Validation Zod sur toutes les entrees
+- Sanitisation XSS (escapeHtml) et PocketBase (escapePbFilter)
+- Headers HTTP securises (CSP, HSTS, X-Frame-Options, etc.)
+- Docker avec utilisateur non-root + health checks
+- Wrapper DB abstrait (preparation migration Supabase)
 
 ## Documentation
 
-| Sujet | Fichier |
+| Document | Chemin |
 |---|---|
 | Glossaire metier | [`docs/glossaire.md`](docs/glossaire.md) |
 | Norme de code | [`docs/norme-code.md`](docs/norme-code.md) |
+| Threat Model | [`docs/securite/threat-model.md`](docs/securite/threat-model.md) |
+| Registre RGPD | [`docs/securite/rgpd-registre-traitements.md`](docs/securite/rgpd-registre-traitements.md) |
+| Politique confidentialite | [`docs/securite/politique-confidentialite.md`](docs/securite/politique-confidentialite.md) |
+| Checklist securite | [`docs/securite/checklist-securite.md`](docs/securite/checklist-securite.md) |
+| Runbook incident | [`docs/securite/runbook-incident.md`](docs/securite/runbook-incident.md) |
+| ADR — Wrapper DB | [`docs/adr/ADR-001-wrapper-db-abstraction.md`](docs/adr/ADR-001-wrapper-db-abstraction.md) |
+| ADR — Strategie tests | [`docs/adr/ADR-002-strategie-tests-vitest.md`](docs/adr/ADR-002-strategie-tests-vitest.md) |
 | Securite | [`SECURITY.md`](SECURITY.md) |
 | Contribution | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| Decisions d'architecture | [`docs/adr/`](docs/adr/) |
 
 ## Conventions
 
-- **Commits** : [Conventional Commits](https://www.conventionalcommits.org/) — `type(scope): description`
+- **Commits** : [Conventional Commits](https://www.conventionalcommits.org/) — `type(scope): description` (applique par hook)
 - **Branches** : `type/description-courte` (ex: `feature/formulaire-inscription`)
-- **PR** : Template obligatoire, 1 review minimum
+- **PR** : Template obligatoire avec checklist code/tests/securite
 - **Tests** : Tout code critique doit etre teste avant merge
+- **Definition of Done** : tests + lint + review + securite (voir `docs/norme-code.md`)
 
 ## Licence
 
