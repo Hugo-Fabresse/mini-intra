@@ -111,6 +111,22 @@ create_collection "participations" '{
   "deleteRule": ""
 }'
 
+# 5. Ajouter campus + role a la collection users
+echo ""
+echo "[5/5] Mise a jour de la collection 'users' (ajout campus + role)..."
+USERS_JSON=$(curl -s "$PB_URL/api/collections/users" -H "$H")
+UPDATED=$(echo "$USERS_JSON" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+field_names = [f['name'] for f in d['fields']]
+if 'campus' not in field_names:
+    d['fields'].append({'name': 'campus', 'type': 'text', 'required': False})
+if 'role' not in field_names:
+    d['fields'].append({'name': 'role', 'type': 'select', 'required': False, 'values': ['admin', 'staff']})
+print(json.dumps(d))
+")
+curl -s -X PATCH "$PB_URL/api/collections/users" -H "$H" -H "Content-Type: application/json" -d "$UPDATED" > /dev/null && echo "OK" || echo "SKIP"
+
 echo ""
 echo "=== Setup termine ==="
 echo ""

@@ -4,70 +4,97 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="min-h-screen bg-gray-50 p-8">
-	<div class="mb-6 flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-gray-900">Lyceens</h1>
-			<p class="mt-1 text-sm text-gray-500">Campus {data.campus}</p>
+<div class="min-h-screen bg-blue-50">
+	<!-- Header -->
+	<header class="border-b-2 border-blue-600 bg-white px-8 py-4">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-6">
+				<h1 class="text-lg font-bold uppercase tracking-wider text-blue-600">Mini Intra</h1>
+				<nav class="flex gap-4">
+					<a href="/app/dashboard" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
+						Dashboard
+					</a>
+					<a href="/app/students" class="border-b-2 border-blue-600 pb-1 text-xs font-medium uppercase tracking-wider text-blue-600">
+						Lyceens
+					</a>
+					<a href="/app/events" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
+						Evenements
+					</a>
+				</nav>
+			</div>
+			<form method="POST" action="/auth/logout">
+				<button
+					type="submit"
+					class="border-2 border-blue-200 px-3 py-1 text-xs font-medium uppercase tracking-wider text-blue-400 transition-colors hover:border-blue-600 hover:text-blue-600"
+				>
+					Deconnexion
+				</button>
+			</form>
 		</div>
-		<a href="/app/dashboard" class="text-sm text-blue-600 hover:underline">Retour au dashboard</a>
-	</div>
+	</header>
 
-	<form method="GET" class="mb-4">
-		<input
-			type="search"
-			name="q"
-			value={data.search}
-			placeholder="Rechercher par nom ou prenom (min 2 caracteres)..."
-			class="w-full max-w-md rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-		/>
-	</form>
-
-	{#if data.students.items.length === 0}
-		<div class="rounded-lg bg-white p-8 text-center shadow">
-			<p class="text-gray-500">
-				{#if data.search}
-					Aucun lyceen ne correspond a la recherche "{data.search}".
-				{:else}
-					Aucun lyceen inscrit sur ce campus.
-				{/if}
-			</p>
+	<!-- Content -->
+	<main class="p-8">
+		<div class="mb-6">
+			<h2 class="text-2xl font-bold uppercase tracking-tight text-blue-900">Lyceens</h2>
+			<div class="mt-2 h-1 w-10 bg-blue-600"></div>
+			<p class="mt-2 text-xs uppercase tracking-wider text-blue-400">Campus {data.campus}</p>
 		</div>
-	{:else}
-		<div class="overflow-hidden rounded-lg bg-white shadow">
-			<table class="min-w-full divide-y divide-gray-200">
-				<thead class="bg-gray-50">
-					<tr>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nom</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Prenom</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Etablissement</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Niveau</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200">
-					{#each data.students.items as student}
-						<tr class="transition-colors hover:bg-gray-50">
-							<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{student.nom}</td>
-							<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{student.prenom}</td>
-							<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{student.email}</td>
-							<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{student.etablissement}</td>
-							<td class="whitespace-nowrap px-6 py-4">
-								<span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5
-									{student.niveau === 'terminale' ? 'bg-green-100 text-green-800' :
-									 student.niveau === 'premiere' ? 'bg-blue-100 text-blue-800' :
-									 'bg-gray-100 text-gray-800'}">
-									{student.niveau}
-								</span>
-							</td>
+
+		<!-- Search -->
+		<form method="GET" class="mb-6">
+			<input
+				type="search"
+				name="q"
+				value={data.search}
+				placeholder="Rechercher par nom ou prenom..."
+				class="w-full max-w-md border-2 border-blue-200 bg-white px-4 py-2 text-sm text-blue-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+			/>
+		</form>
+
+		{#if data.students.items.length === 0}
+			<div class="border-2 border-blue-200 bg-white p-12 text-center">
+				<p class="text-sm text-blue-400">
+					{#if data.search}
+						Aucun lyceen ne correspond a "{data.search}"
+					{:else}
+						Aucun lyceen inscrit sur ce campus
+					{/if}
+				</p>
+			</div>
+		{:else}
+			<div class="border-2 border-blue-600 bg-white">
+				<table class="min-w-full">
+					<thead>
+						<tr class="border-b-2 border-blue-600 bg-blue-600">
+							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Nom</th>
+							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Prenom</th>
+							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Email</th>
+							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Etablissement</th>
+							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Niveau</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+					</thead>
+					<tbody>
+						{#each data.students.items as student, i}
+							<tr class="border-b border-blue-100 transition-colors hover:bg-blue-50 {i % 2 === 0 ? 'bg-white' : 'bg-blue-50/30'}">
+								<td class="whitespace-nowrap px-6 py-3 text-sm font-medium text-blue-900">{student.nom}</td>
+								<td class="whitespace-nowrap px-6 py-3 text-sm text-blue-900">{student.prenom}</td>
+								<td class="whitespace-nowrap px-6 py-3 text-sm text-blue-400">{student.email}</td>
+								<td class="whitespace-nowrap px-6 py-3 text-sm text-blue-400">{student.etablissement}</td>
+								<td class="whitespace-nowrap px-6 py-3">
+									<span class="border border-blue-600 px-2 py-0.5 text-xs font-medium uppercase text-blue-600">
+										{student.niveau}
+									</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
 
-		<div class="mt-4 text-sm text-gray-500">
-			{data.students.total} lyceen(s) au total — Page {data.students.page}
-		</div>
-	{/if}
+			<div class="mt-4 text-xs uppercase tracking-wider text-blue-400">
+				{data.students.total} lyceen(s) — Page {data.students.page}
+			</div>
+		{/if}
+	</main>
 </div>

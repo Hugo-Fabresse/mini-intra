@@ -16,48 +16,75 @@
 		evenement: 'Evenement',
 		coding_club: 'Coding Club'
 	};
-
-	const typeColors: Record<string, string> = {
-		stage: 'bg-orange-100 text-orange-800',
-		evenement: 'bg-blue-100 text-blue-800',
-		coding_club: 'bg-purple-100 text-purple-800'
-	};
 </script>
 
-<div class="min-h-screen bg-gray-50 p-8">
-	<div class="mb-6 flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-gray-900">Evenements</h1>
-			<p class="mt-1 text-sm text-gray-500">Campus {data.campus}</p>
+<div class="min-h-screen bg-blue-50">
+	<!-- Header -->
+	<header class="border-b-2 border-blue-600 bg-white px-8 py-4">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-6">
+				<h1 class="text-lg font-bold uppercase tracking-wider text-blue-600">Mini Intra</h1>
+				<nav class="flex gap-4">
+					<a href="/app/dashboard" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
+						Dashboard
+					</a>
+					<a href="/app/students" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
+						Lyceens
+					</a>
+					<a href="/app/events" class="border-b-2 border-blue-600 pb-1 text-xs font-medium uppercase tracking-wider text-blue-600">
+						Evenements
+					</a>
+				</nav>
+			</div>
+			<form method="POST" action="/auth/logout">
+				<button
+					type="submit"
+					class="border-2 border-blue-200 px-3 py-1 text-xs font-medium uppercase tracking-wider text-blue-400 transition-colors hover:border-blue-600 hover:text-blue-600"
+				>
+					Deconnexion
+				</button>
+			</form>
 		</div>
-		<a href="/app/dashboard" class="text-sm text-blue-600 hover:underline">Retour au dashboard</a>
-	</div>
+	</header>
 
-	{#if data.events.items.length === 0}
-		<div class="rounded-lg bg-white p-8 text-center shadow">
-			<p class="text-gray-500">Aucun evenement programme sur ce campus.</p>
-		</div>
-	{:else}
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each data.events.items as evt}
-				<div class="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md">
-					<div class="mb-3 flex items-center justify-between">
-						<span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium {typeColors[evt.type] ?? 'bg-gray-100 text-gray-800'}">
-							{typeLabels[evt.type] ?? evt.type}
-						</span>
-						<span class="text-xs text-gray-400">{evt.places_max} places</span>
-					</div>
-					<h2 class="text-lg font-semibold text-gray-900">{evt.titre}</h2>
-					<p class="mt-2 line-clamp-2 text-sm text-gray-600">{evt.description}</p>
-					<div class="mt-4 border-t border-gray-100 pt-3 text-xs text-gray-500">
-						{formatDate(evt.date_debut)} — {formatDate(evt.date_fin)}
-					</div>
-				</div>
-			{/each}
+	<!-- Content -->
+	<main class="p-8">
+		<div class="mb-6">
+			<h2 class="text-2xl font-bold uppercase tracking-tight text-blue-900">Evenements</h2>
+			<div class="mt-2 h-1 w-10 bg-blue-600"></div>
+			<p class="mt-2 text-xs uppercase tracking-wider text-blue-400">Campus {data.campus}</p>
 		</div>
 
-		<div class="mt-4 text-sm text-gray-500">
-			{data.events.total} evenement(s) au total
-		</div>
-	{/if}
+		{#if data.events.items.length === 0}
+			<div class="border-2 border-blue-200 bg-white p-12 text-center">
+				<p class="text-sm text-blue-400">Aucun evenement programme sur ce campus</p>
+			</div>
+		{:else}
+			<div class="grid grid-cols-1 gap-0 md:grid-cols-2 lg:grid-cols-3">
+				{#each data.events.items as evt, i}
+					<div class="group border-2 border-blue-600 bg-white p-6 transition-colors hover:bg-blue-600
+						{i % 3 !== 0 ? 'lg:border-l-0' : ''}
+						{i % 2 !== 0 ? 'max-lg:border-l-0' : ''}
+						{i >= 3 ? 'border-t-0' : ''}
+						{i >= 2 && i < 3 ? 'max-lg:border-t-0' : ''}">
+						<div class="mb-3 flex items-center justify-between">
+							<span class="border border-blue-600 px-2 py-0.5 text-xs font-medium uppercase tracking-wider text-blue-600 group-hover:border-white group-hover:text-white">
+								{typeLabels[evt.type] ?? evt.type}
+							</span>
+							<span class="text-xs text-blue-300 group-hover:text-blue-200">{evt.places_max} places</span>
+						</div>
+						<h3 class="text-lg font-bold text-blue-900 group-hover:text-white">{evt.titre}</h3>
+						<p class="mt-2 line-clamp-2 text-sm text-blue-400 group-hover:text-blue-100">{evt.description}</p>
+						<div class="mt-4 border-t border-blue-100 pt-3 text-xs text-blue-300 group-hover:border-blue-400 group-hover:text-blue-200">
+							{formatDate(evt.date_debut)} — {formatDate(evt.date_fin)}
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="mt-4 text-xs uppercase tracking-wider text-blue-400">
+				{data.events.total} evenement(s)
+			</div>
+		{/if}
+	</main>
 </div>

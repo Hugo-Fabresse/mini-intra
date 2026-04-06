@@ -12,15 +12,14 @@
 </script>
 
 <div>
-	<label for={inputId} class="block text-sm font-medium text-gray-700">
+	<label for={inputId} class="block text-sm font-medium text-blue-900 mb-1">
 		{label}
 	</label>
 	<input
-		{id}
 		id={inputId}
-		class="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-1 {error
-			? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-			: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}"
+		class="w-full border-2 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 {error
+			? 'border-red-600 text-red-900'
+			: 'border-blue-200 text-blue-900 focus:border-blue-600'}"
 		aria-invalid={error ? 'true' : undefined}
 		aria-describedby={error ? `${inputId}-error` : undefined}
 		{...rest}
