@@ -65,22 +65,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  sast:
-    name: Static Application Security Testing
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-
-      # CodeQL — analyse statique de securite
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript-typescript
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+  # CodeQL est gere par le Default Setup de GitHub (Settings > Security)
+  # Pas besoin de le dupliquer ici.
 
   docker-security:
     name: Docker image security scan
