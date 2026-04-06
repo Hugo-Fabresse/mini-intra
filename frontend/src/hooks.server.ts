@@ -6,7 +6,11 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { getSessionToken } from '$lib/server/auth/session';
-import { createRawPb } from '$lib/server/db/index';
+import PocketBase from 'pocketbase';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
+
+const PB_URL = privateEnv.PB_INTERNAL_URL ?? publicEnv.PUBLIC_POCKETBASE_URL ?? 'http://localhost:8090';
 
 const securityHeaders: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
@@ -28,29 +32,35 @@ const authHook: Handle = async ({ event, resolve }) => {
 
 	if (token) {
 		try {
-			const pb = createRawPb();
+			const pb = new PocketBase(PB_URL);
 			pb.authStore.save(token);
 
-			// Valider et rafraichir le token
-			const authData = await pb.collection('users').authRefresh();
-			const record = authData.record;
+			if (pb.authStore.isValid) {
+				const authData = await pb.collection('users').authRefresh();
+				const record = authData.record;
 
-			event.locals.user = {
-				id: record.id,
-				email: record.email ?? '',
-				name: (record.name as string) ?? '',
-				campus: (record.campus as string) ?? '',
-				role: (record.role as 'admin' | 'staff') ?? 'staff',
-				avatar: (record.avatar as string) ?? '',
-				created: record.created ?? '',
-				updated: record.updated ?? ''
-			};
+				event.locals.token = pb.authStore.token;
+				event.locals.user = {
+					id: record.id,
+					email: (record.email as string) ?? '',
+					name: (record.name as string) ?? '',
+					campus: (record.campus as string) ?? '',
+					role: ((record.role as string) ?? 'staff') as 'admin' | 'staff',
+					avatar: (record.avatar as string) ?? '',
+					created: (record.created as string) ?? '',
+					updated: (record.updated as string) ?? ''
+				};
+			} else {
+				event.locals.user = null;
+				event.locals.token = null;
+			}
 		} catch {
-			// Token invalide ou expire — on nettoie
 			event.locals.user = null;
+			event.locals.token = null;
 		}
 	} else {
 		event.locals.user = null;
+		event.locals.token = null;
 	}
 
 	return resolve(event);

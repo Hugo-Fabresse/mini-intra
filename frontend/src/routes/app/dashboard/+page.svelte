@@ -20,6 +20,9 @@
 					<a href="/app/events" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
 						Evenements
 					</a>
+					<a href="/app/participations" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
+						Participations
+					</a>
 				</nav>
 			</div>
 			<div class="flex items-center gap-4">
@@ -63,7 +66,7 @@
 		</div>
 
 		<!-- Navigation cards -->
-		<div class="grid grid-cols-1 gap-0 md:grid-cols-2">
+		<div class="grid grid-cols-1 gap-0 md:grid-cols-3">
 			<a
 				href="/app/students"
 				class="group border-2 border-blue-600 bg-white p-8 transition-colors hover:bg-blue-600"
@@ -86,6 +89,19 @@
 				</h3>
 				<p class="mt-2 text-sm text-blue-400 group-hover:text-blue-100">
 					Gerer les stages, evenements et coding clubs
+				</p>
+				<div class="mt-4 h-0.5 w-8 bg-blue-600 group-hover:bg-white"></div>
+			</a>
+
+			<a
+				href="/app/participations"
+				class="group border-2 border-l-0 border-blue-600 bg-white p-8 transition-colors hover:bg-blue-600"
+			>
+				<h3 class="text-lg font-bold uppercase tracking-wider text-blue-600 group-hover:text-white">
+					Participations
+				</h3>
+				<p class="mt-2 text-sm text-blue-400 group-hover:text-blue-100">
+					Suivi des inscriptions et presences
 				</p>
 				<div class="mt-4 h-0.5 w-8 bg-blue-600 group-hover:bg-white"></div>
 			</a>

@@ -1,11 +1,11 @@
 import type { PageServerLoad } from './$types';
 import { requireAuth } from '$lib/server/auth/guards';
-import { createRawPb } from '$lib/server/db/index';
+import { createAuthenticatedPb } from '$lib/server/db/index';
 
 export const load: PageServerLoad = async (event) => {
 	requireAuth(event);
 
-	const pb = createRawPb();
+	const pb = createAuthenticatedPb(event.locals.token!);
 	const campus = event.locals.user!.campus;
 
 	const events = await pb.collection('events').getList(1, 50, {

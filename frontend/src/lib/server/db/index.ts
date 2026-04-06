@@ -1,13 +1,16 @@
 /**
  * Point d'entree du wrapper DB.
- * Cree une instance PocketBase connectee au backend.
+ *
+ * Cote serveur (Docker) on utilise PB_INTERNAL_URL (reseau interne Docker).
+ * Cote client (navigateur) on utilise PUBLIC_POCKETBASE_URL (localhost).
  */
 
 import PocketBase from 'pocketbase';
 import { PocketBaseAdapter } from './pocketbase.adapter';
-import { env } from '$env/dynamic/public';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
-const PB_URL = env.PUBLIC_POCKETBASE_URL ?? 'http://localhost:8090';
+const PB_URL = privateEnv.PB_INTERNAL_URL ?? publicEnv.PUBLIC_POCKETBASE_URL ?? 'http://localhost:8090';
 
 /** Cree un nouveau client PocketBase (1 par requete serveur) */
 export function createDb(): PocketBaseAdapter {
@@ -15,14 +18,14 @@ export function createDb(): PocketBaseAdapter {
 	return new PocketBaseAdapter(pb);
 }
 
-/** Cree un client PocketBase avec le token d'auth d'un utilisateur */
-export function createAuthenticatedDb(token: string): PocketBaseAdapter {
+/** Cree un client PocketBase authentifie avec un token utilisateur */
+export function createAuthenticatedPb(token: string): PocketBase {
 	const pb = new PocketBase(PB_URL);
 	pb.authStore.save(token);
-	return new PocketBaseAdapter(pb);
+	return pb;
 }
 
-/** Client PocketBase brut pour les cas speciaux (auth) */
+/** Client PocketBase brut sans auth */
 export function createRawPb(): PocketBase {
 	return new PocketBase(PB_URL);
 }

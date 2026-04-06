@@ -1,11 +1,11 @@
 import type { PageServerLoad } from './$types';
 import { requireAuth } from '$lib/server/auth/guards';
-import { createRawPb } from '$lib/server/db/index';
+import { createAuthenticatedPb } from '$lib/server/db/index';
 
 export const load: PageServerLoad = async (event) => {
 	requireAuth(event);
 
-	const pb = createRawPb();
+	const pb = createAuthenticatedPb(event.locals.token!);
 
 	// Compter les students du campus de l'utilisateur
 	const students = await pb.collection('students').getList(1, 1, {

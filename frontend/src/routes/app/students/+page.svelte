@@ -20,6 +20,9 @@
 					<a href="/app/events" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
 						Evenements
 					</a>
+					<a href="/app/participations" class="pb-1 text-xs font-medium uppercase tracking-wider text-blue-400 hover:text-blue-600">
+						Participations
+					</a>
 				</nav>
 			</div>
 			<form method="POST" action="/auth/logout">

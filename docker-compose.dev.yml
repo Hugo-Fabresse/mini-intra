@@ -24,7 +24,8 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - PUBLIC_POCKETBASE_URL=http://pocketbase:8090
+      - PUBLIC_POCKETBASE_URL=http://localhost:8090
+      - PB_INTERNAL_URL=http://pocketbase:8090
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@mini-intra.local}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-adminpassword12}
       - ALLOWED_ORIGINS=http://localhost:5173
