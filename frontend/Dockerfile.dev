@@ -1,0 +1,20 @@
+# SvelteKit Frontend - Dev avec hot reload
+FROM node:20-alpine
+
+RUN corepack enable
+
+WORKDIR /app
+
+# Copier les fichiers de dependances
+COPY package.json ./
+
+# Installer les dependances (pas de lockfile en dev initial)
+RUN pnpm install
+
+# Copier le reste du code source
+COPY . .
+
+EXPOSE 5173
+
+# Lancer le serveur de dev avec host 0.0.0.0 pour etre accessible depuis Docker
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]

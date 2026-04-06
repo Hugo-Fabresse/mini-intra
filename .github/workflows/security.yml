@@ -1,0 +1,141 @@
+name: Security — Audit & Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Scan hebdomadaire le lundi a 8h UTC
+    - cron: '0 8 * * 1'
+
+jobs:
+  npm-audit:
+    name: Audit npm dependencies
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # Audit avec rapport
+      - name: Audit (report)
+        run: pnpm audit --json > audit-report.json || true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: frontend/audit-report.json
+
+      # Fail sur les vulnerabilites critiques et hautes
+      - name: Audit (fail on high+)
+        run: pnpm audit --audit-level=high
+
+  secret-scan:
+    name: Scan secrets & credentials
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Trufflehog — detecte les secrets dans l'historique git
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+      # Gitleaks — detecte les patterns de secrets
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: Static Application Security Testing
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # CodeQL — analyse statique de securite
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  docker-security:
+    name: Docker image security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frontend image
+        run: docker build -t mini-intra-frontend:scan ./frontend
+
+      - name: Build pocketbase image
+        run: docker build -t mini-intra-pocketbase:scan ./pocketbase-backend
+
+      # Trivy — scan les images Docker pour les CVE
+      - name: Trivy scan frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: mini-intra-frontend:scan
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: 1
+
+      - name: Trivy scan pocketbase
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: mini-intra-pocketbase:scan
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: 1
+
+  licence-check:
+    name: Licence compliance
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # Verifier les licences des dependances
+      - name: Install license-checker
+        run: pnpm add -D license-checker-rspack
+
+      - name: Check licenses
+        run: |
+          npx license-checker-rspack --failOn "GPL-2.0;GPL-3.0;AGPL-1.0;AGPL-3.0" --summary

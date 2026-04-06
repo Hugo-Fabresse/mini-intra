@@ -1,0 +1,18 @@
+{
+  // "extends": "./.svelte-kit/tsconfig.json",
+  // Note: decommenter la ligne ci-dessus apres un premier `pnpm dev` ou `pnpm build`
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ESNext"
+  }
+}

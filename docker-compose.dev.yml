@@ -1,0 +1,40 @@
+services:
+  pocketbase:
+    build:
+      context: ./pocketbase-backend
+      dockerfile: Dockerfile
+    container_name: mini-intra-pocketbase
+    ports:
+      - "8090:8090"
+    volumes:
+      - pb_data:/pb/pb_data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: mini-intra-frontend-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - PUBLIC_POCKETBASE_URL=http://pocketbase:8090
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@mini-intra.local}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-adminpassword12}
+      - ALLOWED_ORIGINS=http://localhost:5173
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/static:/app/static
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pb_data:

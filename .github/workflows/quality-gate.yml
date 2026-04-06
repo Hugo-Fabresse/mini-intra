@@ -1,0 +1,100 @@
+name: Quality Gate — PR Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pr-quality-gate:
+    name: PR Quality Gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # 1. Lint
+      - name: ESLint
+        run: pnpm eslint .
+
+      # 2. Format
+      - name: Prettier check
+        run: pnpm prettier --check .
+
+      # 3. Type check
+      - name: Svelte Check
+        run: pnpm check
+
+      # 4. Tests avec couverture
+      - name: Tests
+        run: pnpm test:coverage
+
+      # 5. Audit securite
+      - name: npm audit
+        run: pnpm audit --audit-level=high
+
+      # 6. Build
+      - name: Build
+        run: pnpm build
+
+      # 7. Verifier les fichiers modifies pour du code sensible
+      - name: Check for sensitive patterns
+        run: |
+          echo "=== Checking for potential secrets in changed files ==="
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.svelte' '*.js' '*.json' || true)
+          if [ -n "$CHANGED_FILES" ]; then
+            # Patterns de secrets courants
+            PATTERNS="password\s*=\s*['\"]|api[_-]?key\s*=\s*['\"]|secret\s*=\s*['\"]|token\s*=\s*['\"]|private[_-]?key"
+            FOUND=$(echo "$CHANGED_FILES" | xargs grep -ilE "$PATTERNS" 2>/dev/null || true)
+            if [ -n "$FOUND" ]; then
+              echo "::warning::Potential secrets detected in: $FOUND"
+              echo "Please review these files before merging."
+            else
+              echo "No suspicious patterns found."
+            fi
+          fi
+
+      # 8. Verifier qu'il n'y a pas de console.log
+      - name: Check for console.log
+        run: |
+          CHANGED_TS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.svelte' || true)
+          if [ -n "$CHANGED_TS" ]; then
+            FOUND=$(echo "$CHANGED_TS" | xargs grep -n "console\.log" 2>/dev/null || true)
+            if [ -n "$FOUND" ]; then
+              echo "::error::console.log found in changed files:"
+              echo "$FOUND"
+              exit 1
+            fi
+          fi
+
+      # 9. Verifier la taille des fichiers (pas de binaires enormes)
+      - name: Check file sizes
+        run: |
+          LARGE_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | while read f; do
+            if [ -f "$f" ]; then
+              SIZE=$(wc -c < "$f")
+              if [ "$SIZE" -gt 1048576 ]; then
+                echo "$f ($(( SIZE / 1024 ))KB)"
+              fi
+            fi
+          done)
+          if [ -n "$LARGE_FILES" ]; then
+            echo "::error::Files larger than 1MB detected:"
+            echo "$LARGE_FILES"
+            exit 1
+          fi

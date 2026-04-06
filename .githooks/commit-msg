@@ -1,0 +1,72 @@
+#!/bin/bash
+# ===========================================
+# Commit-msg hook — Conventional Commits
+# ===========================================
+# Verifie que le message de commit respecte le format :
+#   type(scope): description
+#
+# Types autorises : feat, fix, refactor, test, docs, chore, ci, style, perf
+
+set -e
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# Ignorer les merges et les reverts
+if echo "$COMMIT_MSG" | grep -qE "^(Merge|Revert|fixup!|squash!)"; then
+  exit 0
+fi
+
+# Pattern Conventional Commits
+# type(scope): description  OU  type: description
+PATTERN="^(feat|fix|refactor|test|docs|chore|ci|style|perf)(\([a-z0-9-]+\))?: .{1,72}$"
+
+FIRST_LINE=$(echo "$COMMIT_MSG" | head -1)
+
+if ! echo "$FIRST_LINE" | grep -qE "$PATTERN"; then
+  echo -e "${RED}=== Message de commit invalide ===${NC}"
+  echo ""
+  echo "Format attendu : type(scope): description"
+  echo ""
+  echo "Types autorises :"
+  echo "  feat     — Nouvelle fonctionnalite"
+  echo "  fix      — Correction de bug"
+  echo "  refactor — Refactoring sans changement fonctionnel"
+  echo "  test     — Ajout ou modification de tests"
+  echo "  docs     — Documentation uniquement"
+  echo "  chore    — Maintenance (dependances, config)"
+  echo "  ci       — Pipeline CI/CD"
+  echo "  style    — Formatage uniquement"
+  echo "  perf     — Amelioration de performance"
+  echo ""
+  echo "Exemples :"
+  echo "  feat(auth): ajout login oauth microsoft"
+  echo "  fix(students): correction validation email"
+  echo "  chore(deps): mise a jour eslint"
+  echo ""
+  echo "Votre message : \"$FIRST_LINE\""
+  echo ""
+  exit 1
+fi
+
+# Verifier que la description commence en minuscule
+DESC=$(echo "$FIRST_LINE" | sed 's/^[^:]*: //')
+FIRST_CHAR=$(echo "$DESC" | cut -c1)
+if echo "$FIRST_CHAR" | grep -q '[A-Z]'; then
+  echo -e "${RED}La description doit commencer par une minuscule.${NC}"
+  echo "  Actuel  : $FIRST_LINE"
+  echo "  Attendu : $(echo "$FIRST_LINE" | sed "s/: $DESC/: $(echo "$DESC" | sed 's/^./\L&/')/")"
+  exit 1
+fi
+
+# Verifier qu'il n'y a pas de point final
+if echo "$FIRST_LINE" | grep -q '\.$'; then
+  echo -e "${RED}Pas de point final dans le message de commit.${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}Commit message OK${NC}"

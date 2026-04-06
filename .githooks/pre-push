@@ -1,0 +1,35 @@
+#!/bin/bash
+# ===========================================
+# Pre-push hook — Tests obligatoires
+# ===========================================
+# Bloque le push si les tests ne passent pas.
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+echo "=== Pre-push : verification avant envoi ==="
+
+# 1. Tests unitaires
+echo ""
+echo "[1/2] Tests unitaires..."
+cd frontend
+pnpm test 2>&1 || {
+  echo -e "${RED}=== PUSH BLOQUE : les tests ne passent pas ===${NC}"
+  echo "Corrigez les tests avant de pusher."
+  exit 1
+}
+
+# 2. Build de verification
+echo ""
+echo "[2/2] Build de verification..."
+pnpm build 2>&1 || {
+  echo -e "${RED}=== PUSH BLOQUE : le build echoue ===${NC}"
+  echo "Corrigez les erreurs de build avant de pusher."
+  exit 1
+}
+
+echo ""
+echo -e "${GREEN}=== Pre-push : tout est OK — push autorise ===${NC}"
