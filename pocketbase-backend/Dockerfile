@@ -1,7 +1,7 @@
 # PocketBase Backend
 # Image legere Alpine avec le binaire PocketBase
 
-FROM alpine:3.19 AS downloader
+FROM alpine:3.23 AS downloader
 
 ARG PB_VERSION=0.25.9
 ARG TARGETARCH=amd64
@@ -12,7 +12,7 @@ RUN apk add --no-cache wget unzip \
     && unzip /tmp/pocketbase.zip -d /tmp/pocketbase \
     && rm /tmp/pocketbase.zip
 
-FROM alpine:3.19
+FROM alpine:3.23
 
 # Securite : utilisateur non-root
 RUN addgroup -S pocketbase && adduser -S pocketbase -G pocketbase
