@@ -48,7 +48,7 @@
   "dependencies": {
     "pocketbase": "^0.26.0",
     "sveltekit-superforms": "^2.30.0",
-    "zod": "^3.24.0"
+    "zod": "^4.3.6"
   },
   "lint-staged": {
     "*.{ts,svelte}": [
